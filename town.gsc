@@ -53,7 +53,7 @@ init_custom_map()
 	wallweapons( "m16_zm", ( 2273.641, 167.5, 140.125 ), ( 0, 130, 0 ), 1200, 600 );
 	//wallweapons( "emp_grenade_zm", ( 969.69, 280.402, 6.901 ), ( 0, 45, 0 ), 750 );
 	//pile_of_emp( "emp_grenade_zm", ( 969.69, 284.402, 4.525 ), ( 0, 15, 90 ));
-	wallweapons( "claymore_zm", ( 629.01, 441.01, 14.302 ), ( 90, -45, 0 ), 1000 );
+	wallweapons( "claymore_zm", ( 629.01, 441.01, 14.302 ), ( 90, -45, 0 ), 2000 );
 }
 
 play_fx( fx )
