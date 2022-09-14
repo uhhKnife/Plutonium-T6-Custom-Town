@@ -122,7 +122,7 @@ wallweaponmonitor( weapon, cost, ammo )
 					self.in_use_weap = 1;
 					player.score -= cost;
 					player thread weapon_give( weapon, 0, 1 );
-					player iprintln( "^2" + ( weap + " Buy" ) );
+					//player iprintln( "^2" + ( weap + " Buy" ) );
                     wait 3;
 			        self.in_use_weap = 0;
 				}
@@ -134,7 +134,7 @@ wallweaponmonitor( weapon, cost, ammo )
 						self.in_use_weap = 1;
 						player.score -= cost;
 						player thread weapon_give( weapon, 0, 1 );
-						player iprintln( "^2" + ( weap + " Buy" ) );
+						//player iprintln( "^2" + ( weap + " Buy" ) );
                    	 	wait 3;
 			       	 	self.in_use_weap = 0;
 					}
@@ -145,7 +145,7 @@ wallweaponmonitor( weapon, cost, ammo )
 						player.score -= ammocost;
 						player setweaponammoclip(weapon, 150);
 						player setWeaponAmmostock(weapon, 900 );
-						player iprintln( "^2" + ( weap + " Ammo Buy" ) );
+						//player iprintln( "^2" + ( weap + " Ammo Buy" ) );
                     	wait 3;
 			        	self.in_use_weap = 0;
 					}	
@@ -156,7 +156,7 @@ wallweaponmonitor( weapon, cost, ammo )
 						player.score -= upgradedammocost;
 						player setweaponammoclip("m16_gl_upgraded_zm", 150);
 						player setWeaponAmmostock("m16_gl_upgraded_zm", 900 );
-						player iprintln( "^2" + ( weap + " Upgraded Ammo Buy" ) );
+						//player iprintln( "^2" + ( weap + " Upgraded Ammo Buy" ) );
                    		wait 3;
 			       		self.in_use_weap = 0;
 					}
