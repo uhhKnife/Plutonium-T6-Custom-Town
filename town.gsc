@@ -8,11 +8,46 @@
 #include maps/mp/zombies/_zm_magicbox;
 #include maps/mp/zombies/_zm_utility;
 #include maps/mp/zombies/_zm_weap_riotshield;
+#include codescripts\struct;
+#include maps\mp\zombies\_zm_melee_weapon;
+#include maps\mp\_zm_transit_bus;
+#include maps\mp\gametypes_zm\_globallogic;
+#include maps\mp\gametypes_zm\_weapons;
+#include maps\mp\zombies\_zm_powerups;
+#include maps\mp\zombies\_zm_buildables;
+#include maps\mp\zombies\_zm_pers_upgrades_functions;
+#include maps\mp\zombies\_zm_game_module;
+#include maps\mp\zombies\_zm_score;
+#include maps\mp\zombies\_zm_stats;
+#include maps\mp\zombies\_zm_utility;
+#include maps\mp\zombies\_zm_weap_cymbal_monkey;
+#include maps\mp\gametypes_zm\_spawning;
+#include maps\mp\zombies\_zm_spawner;
+#include maps\mp\zombies\_zm;
+#include maps\mp\zombies\_zm_perks;
+#include maps\mp\zombies\_zm_zonemgr;
+#include maps\mp\zombies\_zm_weap_claymore;
+#include maps\mp\zombies\_zm_ai_avogadro;
+#include maps\mp\zombies\_zm_audio;
+#include maps\mp\zombies\_zm_power;
+#include maps\mp\zombies\_zm_laststand;
+#include maps\mp\zombies\_zm_devgui;
+#include maps\mp\zombies\_zm_weap_jetgun;
+#include maps\mp\zombies\_zm_ai_dogs;
+#include maps\mp\zombies\_zm_ai_screecher;
+#include maps\mp\zombies\_zm_ai_basic;
+#include maps\mp\zombies\_zm_blockers;
+#include maps\mp\zm_transit_lava;
+#include maps\mp\zm_transit_buildables;
+#include maps\mp\_visionset_mgr;
+
 init()
 {
     if( getdvar( "mapname" ) == "zm_transit" && getdvar ( "g_gametype")  == "zstandard" )
 	{
-	    level._effect["fx_zmb_wall_buy_m16"] = loadfx( "maps/zombie/fx_zmb_wall_buy_m16" ); 
+	    vault_doors = getentarray( "town_bunker_door", "targetname" );
+        array_thread( vault_doors, ::transit_vault_breach );
+		level._effect["fx_zmb_wall_buy_m16"] = loadfx( "maps/zombie/fx_zmb_wall_buy_m16" ); 
 	    level._effect["fx_zmb_wall_buy_taseknuck"] = loadfx( "maps/zombie/fx_zmb_wall_buy_taseknuck" );
 		level._effect[ "wall_m16" ] = loadfx( "maps/zombie/fx_zmb_wall_buy_m16" );
 		level._effect[ "wall_claymore" ] = loadfx( "maps/zombie/fx_zmb_wall_buy_claymore" );
@@ -45,6 +80,8 @@ onPlayerSpawned()
 	level endon( "game_ended" );
 	self waittill( "spawned_player" );
 	self thread init_wall_fx();
+	wait 3;
+	self iprintln( "^6Bank door openable with a surprise behind it!" );
 }
 
 init_custom_map()
@@ -110,11 +147,15 @@ wallweaponmonitor( weapon, cost, ammo )
 			{
 				if(weapon == "m16_zm")
 				{
-                	player thread SpawnHint( self.origin, 30, 30, "HINT_ACTIVATE", "Hold &&1 For Buy " + weap + " [Cost: " + cost + "] Ammo [Cost: 600] Upgraded Ammo [Cost: 4500]" );				
+                	player thread SpawnHint( self.origin, 30, 30, "HINT_ACTIVATE", "Hold ^3&&1^7 for M16A1 [Cost: " + cost + "] Ammo [Cost: 600] Upgraded Ammo [Cost: 4500]" );				
 				}
-				else
+				else if(weapon == "claymore_zm")
 				{
-                	player thread SpawnHint( self.origin, 30, 30, "HINT_ACTIVATE", "Hold &&1 For Buy " + weap + " [Cost: " + cost + "]" );
+                	player thread SpawnHint( self.origin, 30, 30, "HINT_ACTIVATE", "Hold ^3&&1^7 for Claymore [Cost: " + cost + "]" );
+				}
+				else if(weapon == "riotshield_zm")
+				{
+                	player thread SpawnHint( self.origin, 30, 30, "HINT_ACTIVATE", "Hold ^3&&1^7 for Riotshield  [Cost: " + cost + "]" );
 				}
 				if( player usebuttonpressed() && weapon != "m16_zm" && !(player hasWeapon(weapon)) && !(self.in_use_weap) && player.score >= cost  && !player maps/mp/zombies/_zm_laststand::player_is_in_laststand())
 				{
@@ -182,4 +223,60 @@ SpawnHint( origin, width, height, cursorhint, string )
 	hint setvisibletoall();
 	wait 0.2;
 	hint delete();
+}
+
+transit_vault_breach() 
+{
+	self.damage_state = 0;
+	clip = getent( self.target, "targetname" );
+    self.clip = clip;
+    if(self.target == "pf30_auto2434")
+    	self thread vault_breach_think();
+}
+
+vault_breach_think() 
+{
+	self.health = 9;
+	self setcandamage( 1 );
+	self.damage_state = 0;
+	self.clip.health = 9;
+	self.clip setcandamage( 1 );
+	for( ;; ) 
+	{
+		self waittill( "damage", amount, attacker, direction, point, dmg_type, modelname, tagname, partname, weaponname );
+		if( isplayer( attacker ) )
+        {
+            if( dmg_type == "MOD_PROJECTILE" || dmg_type == "MOD_PROJECTILE_SPLASH" || dmg_type == "MOD_EXPLOSIVE" || dmg_type == "MOD_EXPLOSIVE_SPLASH" || dmg_type == "MOD_GRENADE" || dmg_type == "MOD_GRENADE_SPLASH" )
+            {
+                if ( self.damage_state == 0 )
+                    self.damage_state = 1;
+                playfxontag( level._effect[ "def_explosion" ], self, "tag_origin" );
+                self playsound( "exp_vault_explode" );
+                self bunkerdoorrotate( 1 );
+                if ( isDefined( self.script_flag ) )
+                    flag_set( self.script_flag );
+                if ( isDefined( self.clip ) )
+                    self.clip connectpaths();
+                wait 1;
+                playsoundatposition( "zmb_cha_ching_loud", self.origin );
+                break;
+            }
+		}
+	}
+}
+
+bunkerdoorrotate( open, time ) 
+{
+	if ( !isDefined( time ) )
+		time = 0.2;
+	rotate = self.script_float;
+	if ( !open )
+		rotate *= -1;
+	if ( isDefined( self.script_angles ) ) 
+	{
+		self notsolid();
+		self.clip delete();
+		self rotateto( self.script_angles, time, 0, 0 );
+		self thread maps\mp\zombies\_zm_blockers::door_solid_thread();
+	}
 }
